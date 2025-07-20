@@ -1,0 +1,6 @@
+{
+  "className": "Solution",
+  "methodName": "isPalindrome",
+  "sourceCode": "class Solution {\n    public boolean isPalindrome(int x) {\n        String str = Integer.toString(x);\n        String rev = new StringBuilder(str).reverse().toString();\n        if(str.charAt(0) == '-'){\n            return false;\n        }\n        return str.equals(rev);\n    }\n}",
+  "testInputs": ["121", "-121", "12321"]
+}

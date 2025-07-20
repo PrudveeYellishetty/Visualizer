@@ -1,0 +1,6 @@
+{
+  "className": "Solution",
+  "methodName": "sortColors",
+  "sourceCode": "import java.util.Arrays;\n\npublic class Solution {\n    public void sortColors(int[] nums) {\n        int i = 0, j = nums.length - 1;\n        int it = 0, temp;\n        while (it <= j) {\n            if (nums[it] == 0) {\n                temp = nums[it];\n                nums[it] = nums[i];\n                nums[i] = temp;\n                i++;\n                it++;\n            } else if (nums[it] == 2) {\n                temp = nums[it];\n                nums[it] = nums[j];\n                nums[j] = temp;\n                j--;\n            } else {\n                it++;\n            }\n        }\n    }\n\n    public static void main(String[] args) {\n        Solution sol = new Solution();\n        int[] nums = {2, 0, 2, 1, 1, 0};\n        sol.sortColors(nums);\n        System.out.println(Arrays.toString(nums));\n    }\n}",
+  "testInputs": []
+}

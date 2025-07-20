@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTrace Visualizer API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 200px;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .success {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        .error {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        pre {
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 BTrace Visualizer API Test</h1>
+    
+    <div class="container">
+        <h2>Test Your Java Code</h2>
+        <form id="traceForm">
+            <div class="form-group">
+                <label for="className">Class Name:</label>
+                <input type="text" id="className" value="Solution" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="methodName">Method Name:</label>
+                <input type="text" id="methodName" value="sortColors" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="sourceCode">Java Source Code:</label>
+                <textarea id="sourceCode" required>import java.util.Arrays;
+
+public class Solution {
+    public void sortColors(int[] nums) {
+        int i = 0, j = nums.length - 1;
+        int it = 0, temp;
+        while (it <= j) {
+            if (nums[it] == 0) {
+                temp = nums[it];
+                nums[it] = nums[i];
+                nums[i] = temp;
+                i++;
+                it++;
+            } else if (nums[it] == 2) {
+                temp = nums[it];
+                nums[it] = nums[j];
+                nums[j] = temp;
+                j--;
+            } else {
+                it++;
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Solution sol = new Solution();
+        int[] nums = {2, 0, 2, 1, 1, 0};
+        sol.sortColors(nums);
+        System.out.println(Arrays.toString(nums));
+    }
+}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="testInputs">Test Inputs (optional - will use main method if present):</label>
+                <input type="text" id="testInputs" value="" placeholder="Leave empty to use main method execution">
+            </div>
+            
+            <button type="submit" id="submitBtn">Execute BTrace</button>
+        </form>
+    </div>
+    
+    <div id="result" style="display: none;"></div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8090/api/trace';
+        
+        document.getElementById('traceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const resultDiv = document.getElementById('result');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Executing...';
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'container result loading';
+            resultDiv.innerHTML = '<p>🔄 Executing BTrace... This may take a few seconds.</p>';
+            
+            try {
+                // Prepare request data
+                const testInputsValue = document.getElementById('testInputs').value.trim();
+                const testInputs = testInputsValue ? 
+                    testInputsValue.split(',').map(input => input.trim()) : 
+                    [];
+                
+                const requestData = {
+                    className: document.getElementById('className').value,
+                    methodName: document.getElementById('methodName').value,
+                    sourceCode: document.getElementById('sourceCode').value,
+                    testInputs: testInputs
+                };
+                
+                // Make API call
+                const response = await fetch(`${API_BASE_URL}/execute`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const result = await response.json();
+                
+                // Display result
+                if (result.success) {
+                    resultDiv.className = 'container result success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ Trace Execution Successful</h3>
+                        <p><strong>Message:</strong> ${result.message}</p>
+                        
+                        <h4>📊 Execution Steps (${result.trace.length} steps):</h4>
+                        <div style="max-height: 500px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                <thead>
+                                    <tr style="background-color: #f8f9fa; position: sticky; top: 0;">
+                                        <th style="border: 1px solid #ddd; padding: 4px;">Step</th>
+                                        <th style="border: 1px solid #ddd; padding: 4px;">Action</th>
+                                        <th style="border: 1px solid #ddd; padding: 4px;">Variables</th>
+                                        <th style="border: 1px solid #ddd; padding: 4px;">Arrays</th>
+                                        <th style="border: 1px solid #ddd; padding: 4px;">Stack</th>
+                                        <th style="border: 1px solid #ddd; padding: 4px;">Highlight</th>
+                                        <th style="border: 1px solid #ddd; padding: 4px;">Result</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${result.trace.map(step => `
+                                        <tr style="${step.highlight !== null ? 'background-color: #fff3cd;' : ''}">
+                                            <td style="border: 1px solid #ddd; padding: 4px; text-align: center; font-weight: bold;">${step.step}</td>
+                                            <td style="border: 1px solid #ddd; padding: 4px; max-width: 200px;">${step.action}</td>
+                                            <td style="border: 1px solid #ddd; padding: 4px; font-family: monospace; font-size: 10px; max-width: 150px;">
+                                                ${step.vars ? Object.entries(step.vars).map(([key, value]) => 
+                                                    `<div><strong>${key}:</strong> ${value === null ? 'null' : (typeof value === 'object' ? JSON.stringify(value) : value)}</div>`
+                                                ).join('') : 'none'}
+                                            </td>
+                                            <td style="border: 1px solid #ddd; padding: 4px; font-family: monospace; font-size: 10px; max-width: 120px;">
+                                                ${step.arrays ? Object.entries(step.arrays).map(([key, value]) => 
+                                                    `<div><strong>${key}:</strong> ${JSON.stringify(value)}</div>`
+                                                ).join('') : (step.array ? JSON.stringify(step.array) : 'none')}
+                                            </td>
+                                            <td style="border: 1px solid #ddd; padding: 4px; font-family: monospace; font-size: 10px;">
+                                                ${step.stack ? step.stack.join(' → ') : 'none'}
+                                            </td>
+                                            <td style="border: 1px solid #ddd; padding: 4px; text-align: center; background-color: ${step.highlight !== null ? '#ffeaa7' : 'transparent'};">
+                                                ${step.highlight !== null ? step.highlight : '-'}
+                                            </td>
+                                            <td style="border: 1px solid #ddd; padding: 4px; font-family: monospace; font-size: 10px; color: #d63031; font-weight: bold;">
+                                                ${step.result || '-'}
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        ${result.rawOutput ? `
+                        <h4>📝 Raw BTrace Output:</h4>
+                        <pre>${result.rawOutput}</pre>
+                        ` : ''}
+                    `;
+                } else {
+                    resultDiv.className = 'container result error';
+                    resultDiv.innerHTML = `
+                        <h3>❌ Trace Execution Failed</h3>
+                        <p><strong>Error:</strong> ${result.message}</p>
+                        ${result.rawOutput ? `
+                        <h4>📝 Debug Output:</h4>
+                        <pre>${result.rawOutput}</pre>
+                        ` : ''}
+                    `;
+                }
+                
+            } catch (error) {
+                resultDiv.className = 'container result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Network Error</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p>Make sure the BTrace Visualizer API is running on port 8090.</p>
+                `;
+            } finally {
+                // Restore button state
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Execute BTrace';
+            }
+        });
+        
+        // Test API health on page load
+        async function checkApiHealth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const health = await response.text();
+                console.log('API Health:', health);
+            } catch (error) {
+                console.error('API is not available:', error.message);
+                alert('⚠️ Warning: BTrace Visualizer API is not running on localhost:8090');
+            }
+        }
+        
+        checkApiHealth();
+    </script>
+</body>
+</html>
