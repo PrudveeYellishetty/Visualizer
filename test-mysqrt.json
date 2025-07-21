@@ -1,0 +1,6 @@
+{
+  "className": "Solution",
+  "methodName": "mySqrt",
+  "sourceCode": "public class Solution {\n    public int mySqrt(int x) {\n        if (x == 0 || x == 1)\n            return x;\n\n        int low = 1, high = x, ans = 0;\n\n        while (low <= high) {\n            int mid = low + (high - low) / 2;\n\n            long square = (long) mid * mid;\n\n            if (square == x)\n                return mid;\n            else if (square < x) {\n                ans = mid;  \n                low = mid + 1;\n            } else {\n                high = mid - 1;\n            }\n        }\n\n        return ans;  \n    }\n\n    public static void main(String[] args) {\n        Solution sol = new Solution();\n\n        int num = 17;\n        int result = sol.mySqrt(num);\n\n        System.out.println(\"The square root of \" + num + \" is \" + result);\n    }\n}",
+  "testInputs": []
+}
