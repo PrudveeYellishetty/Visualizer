@@ -1,20 +1,21 @@
 // src/main/java/com/example/btrace/controller/BTraceController.java
 package com.example.btrace.controller;
 
+import com.example.btrace.ast.ASTTracer;
+import com.example.btrace.ast.ASTTracer.TraceResult;
 import com.example.btrace.dto.TraceRequest;
 import com.example.btrace.dto.TraceResponse;
-import com.example.btrace.service.BTraceService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/trace")
 @CrossOrigin(origins = "*") // Allow CORS for frontend integration
 public class BTraceController {
 
-    @Autowired
-    private BTraceService btraceService;
+    private final ASTTracer astTracer = new ASTTracer();
 
     @PostMapping("/execute")
     public ResponseEntity<TraceResponse> executeTrace(@RequestBody TraceRequest request) {
@@ -38,17 +39,41 @@ public class BTraceController {
         }
 
         try {
-            TraceResponse response = btraceService.executeTrace(request);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                new TraceResponse(false, "Internal server error: " + e.getMessage(), null, null)
+            // Execute trace using AST-based approach
+            TraceResult result = astTracer.executeAndTrace(
+                request.getClassName(), 
+                request.getMethodName(), 
+                request.getSourceCode()
             );
+            
+            if (result.isSuccess()) {
+                return ResponseEntity.ok(new TraceResponse(
+                    true, 
+                    "AST-based trace completed with " + result.getTrace().size() + " events",
+                    result.getTrace(),
+                    result.getRawOutput()
+                ));
+            } else {
+                return ResponseEntity.ok(new TraceResponse(
+                    false, 
+                    result.getMessage(),
+                    new ArrayList<>(),
+                    null
+                ));
+            }
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new TraceResponse(
+                false, 
+                "AST trace failed: " + e.getMessage(),
+                new ArrayList<>(),
+                null
+            ));
         }
     }
 
     @GetMapping("/health")
     public ResponseEntity<String> health() {
-        return ResponseEntity.ok("BTrace Visualizer API is running");
+        return ResponseEntity.ok("BTrace AST service is running!");
     }
 }

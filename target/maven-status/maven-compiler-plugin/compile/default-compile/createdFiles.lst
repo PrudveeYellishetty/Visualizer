@@ -1,6 +1,10 @@
 com\example\btrace\TraceController.class
 com\example\btrace\BTraceVisualizerApplication.class
+com\example\btrace\ast\ASTTracer$TraceResult.class
 com\example\btrace\dto\TraceRequest.class
 com\example\btrace\controller\BTraceController.class
+com\example\btrace\ast\ASTTracer$1.class
 com\example\btrace\dto\TraceResponse.class
-com\example\btrace\service\BTraceService.class
+com\example\btrace\ast\ASTTracer$ASTInstrumenter.class
+com\example\btrace\ast\ASTTracer.class
+com\example\btrace\ast\ASTTracerTest.class

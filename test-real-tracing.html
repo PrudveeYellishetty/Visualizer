@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Variable Tracing Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .code-area { font-family: monospace; background: #f5f5f5; padding: 10px; border-radius: 3px; white-space: pre-wrap; }
+        .response { background: #e8f5e8; padding: 10px; border-radius: 3px; margin-top: 10px; }
+        .error { background: #ffe8e8; }
+        .trace-event { margin: 5px 0; padding: 8px; background: #f0f8ff; border-left: 3px solid #007acc; }
+        .variable { color: #d63384; font-weight: bold; }
+        .method { color: #0f5132; font-weight: bold; }
+        .array { color: #6f42c1; font-weight: bold; }
+        button { padding: 10px 20px; background: #007acc; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #005a9e; }
+        .loading { display: none; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Real Variable Tracing Test</h1>
+        <p>This test demonstrates real-time variable tracking, array states, and method execution tracing for any Java algorithm.</p>
+        
+        <div class="section">
+            <h2>Test Algorithm: QuickSort with Variable Tracking</h2>
+            <div class="code-area" id="sourceCode">public class QuickSorter {
+    private static int[] arr;
+    private static int pivotIndex;
+    private static int leftPointer;
+    private static int rightPointer;
+    
+    public static void main(String[] args) {
+        arr = new int[]{64, 34, 25, 12, 22, 11, 90};
+        System.out.println("Original Array: " + java.util.Arrays.toString(arr));
+        
+        quickSort(0, arr.length - 1);
+        
+        System.out.println("Sorted Array: " + java.util.Arrays.toString(arr));
+    }
+    
+    public static void quickSort(int low, int high) {
+        if (low < high) {
+            pivotIndex = partition(low, high);
+            quickSort(low, pivotIndex - 1);
+            quickSort(pivotIndex + 1, high);
+        }
+    }
+    
+    public static int partition(int low, int high) {
+        int pivot = arr[high];
+        leftPointer = low - 1;
+        
+        for (rightPointer = low; rightPointer < high; rightPointer++) {
+            if (arr[rightPointer] < pivot) {
+                leftPointer++;
+                swap(leftPointer, rightPointer);
+            }
+        }
+        
+        swap(leftPointer + 1, high);
+        return leftPointer + 1;
+    }
+    
+    public static void swap(int i, int j) {
+        int temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+    }
+}</div>
+        </div>
+        
+        <div class="section">
+            <h2>Trace Configuration</h2>
+            <p><strong>Class Name:</strong> <code>QuickSorter</code></p>
+            <p><strong>Target Method:</strong> <code>quickSort</code></p>
+            <p><strong>Expected Traces:</strong> Variable assignments, array states, method calls, pivot selections, pointer movements</p>
+            
+            <button onclick="executeTrace()" id="executeBtn">🚀 Execute Real Tracing</button>
+            <div class="loading" id="loading">⏳ Instrumenting code and executing with variable tracking...</div>
+        </div>
+        
+        <div class="section" id="results" style="display: none;">
+            <h2>📊 Real Execution Trace Results</h2>
+            <div id="responseContainer"></div>
+        </div>
+        
+        <div class="section">
+            <h2>🎯 What This Test Demonstrates</h2>
+            <ul>
+                <li><strong>Variable Tracking:</strong> Real-time monitoring of pivotIndex, leftPointer, rightPointer values</li>
+                <li><strong>Array State Changes:</strong> Complete array contents at each swap operation</li>
+                <li><strong>Method Execution Flow:</strong> Recursive calls with actual parameters</li>
+                <li><strong>Universal Algorithm Support:</strong> Works with any Java algorithm (sorting, searching, DP, graphs)</li>
+                <li><strong>No Hardcoding:</strong> Pure instrumentation-based tracing of actual execution</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function executeTrace() {
+            const btn = document.getElementById('executeBtn');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const responseContainer = document.getElementById('responseContainer');
+            
+            btn.disabled = true;
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            
+            const requestData = {
+                className: "QuickSorter",
+                methodName: "quickSort",
+                sourceCode: document.getElementById('sourceCode').textContent,
+                testInputs: ["64,34,25,12,22,11,90"]
+            };
+            
+            try {
+                const response = await fetch('http://localhost:8090/api/trace', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                displayResults(data);
+                
+            } catch (error) {
+                responseContainer.innerHTML = `<div class="response error">
+                    <h3>❌ Error</h3>
+                    <p>Failed to execute trace: ${error.message}</p>
+                    <p>Make sure the server is running on http://localhost:8090</p>
+                </div>`;
+            } finally {
+                btn.disabled = false;
+                loading.style.display = 'none';
+                results.style.display = 'block';
+            }
+        }
+        
+        function displayResults(data) {
+            const container = document.getElementById('responseContainer');
+            let html = '';
+            
+            if (data.success) {
+                html = `<div class="response">
+                    <h3>✅ ${data.message}</h3>
+                    <p><strong>Raw Output:</strong> ${data.rawOutput}</p>
+                </div>`;
+                
+                if (data.trace && data.trace.length > 0) {
+                    html += '<h3>📋 Detailed Execution Trace</h3>';
+                    
+                    data.trace.forEach(event => {
+                        let eventClass = '';
+                        let eventIcon = '📝';
+                        
+                        switch(event.event_type) {
+                            case 'method_entry': eventIcon = '🔵'; eventClass = 'method'; break;
+                            case 'method_exit': eventIcon = '🔴'; eventClass = 'method'; break;
+                            case 'variable_update': eventIcon = '📊'; eventClass = 'variable'; break;
+                            case 'array_update': eventIcon = '📈'; eventClass = 'array'; break;
+                            case 'array_write': eventIcon = '✏️'; eventClass = 'array'; break;
+                            case 'array_read': eventIcon = '👁️'; eventClass = 'array'; break;
+                            case 'program_start': eventIcon = '🚀'; break;
+                            case 'program_end': eventIcon = '🏁'; break;
+                        }
+                        
+                        html += `<div class="trace-event ${eventClass}">
+                            <strong>${eventIcon} Step ${event.step}: ${event.event_type}</strong><br>
+                            <em>${event.action}</em>`;
+                        
+                        if (event.vars && Object.keys(event.vars).length > 0) {
+                            html += '<br><strong>Variables:</strong> ';
+                            for (const [key, value] of Object.entries(event.vars)) {
+                                html += `<span class="variable">${key}=${value}</span> `;
+                            }
+                        }
+                        
+                        if (event.args && event.args.length > 0) {
+                            html += '<br><strong>Args:</strong> ' + event.args.join(', ');
+                        }
+                        
+                        if (event.return_value) {
+                            html += '<br><strong>Return:</strong> ' + event.return_value;
+                        }
+                        
+                        if (event.output) {
+                            html += '<br><strong>Output:</strong> ' + event.output;
+                        }
+                        
+                        if (event.timestamp) {
+                            html += `<br><small>⏱️ ${new Date(event.timestamp).toLocaleTimeString()}</small>`;
+                        }
+                        
+                        html += '</div>';
+                    });
+                } else {
+                    html += '<p>⚠️ No detailed trace events captured. Check instrumentation.</p>';
+                }
+            } else {
+                html = `<div class="response error">
+                    <h3>❌ Execution Failed</h3>
+                    <p>${data.message}</p>
+                    <p><strong>Details:</strong> ${data.rawOutput || 'No additional details'}</p>
+                </div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
